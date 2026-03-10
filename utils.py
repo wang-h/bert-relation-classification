@@ -260,7 +260,15 @@ def convert_examples_to_features(examples, label_list, max_seq_len,
         if ex_index % 10000 == 0:
             logger.info("Writing example %d of %d" % (ex_index, len(examples)))
 
-        tokens_a = tokenizer.tokenize(example.text_a)
+        # Convert entity markers from [E11], [E12], [E21], [E22] format to # and $ format
+        # This fixes the issue where tokenizer splits [E11] into ['[', 'e', '##11', ']']
+        # See: https://github.com/hint-lab/bert-relation-classification/issues/4
+        text_a_processed = example.text_a
+        if use_entity_indicator:
+            text_a_processed = text_a_processed.replace("[E11]", "#").replace("[E12]", "#")
+            text_a_processed = text_a_processed.replace("[E21]", "$").replace("[E22]", "$")
+        
+        tokens_a = tokenizer.tokenize(text_a_processed)
         if use_entity_indicator:
             # e11_p = tokens_a.index("e11")+1   # the start position of entity1
             # e12_p = tokens_a.index("e12")+2  # the end position ofentity1
